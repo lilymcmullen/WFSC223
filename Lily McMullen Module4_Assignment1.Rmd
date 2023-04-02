@@ -1,0 +1,188 @@
+---
+title: "Module 4 Assignment 1"
+author: "Ellen Bledsoe" 'Lily McMullen'
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Assignment Details
+
+### Purpose
+
+The goal of this assignment is to assess your ability to interpret correlation coefficents and regression analyses.
+
+### Task
+
+Write R code which produces the correct answers and correctly interpret the plots. Correctly interpret the results
+
+### Criteria for Success
+
+-   Code is within the provided code chunks
+-   Code is commented with brief descriptions of what the code does
+-   Code chunks run without errors
+-   Code produces the correct result
+    -   Code that produces the correct answer will receive full credit
+    -   Code attempts with logical direction will receive partial credit
+-   Written answers address the questions in sufficient detail
+
+### Due Date
+
+December 6 at midnight MST
+
+# Assignment Questions
+
+In this assignment, we are going to continue using the hair grass data set from class. The first lesson [Roads and Regressions](https://posit.cloud/spaces/269799/content/4970753) will be particularly helpful to you in completing this assignment.
+
+We are going to look at the relationship between hair grass density and two other variables: phosphorus content and the average summer temperature.
+
+## Set-Up
+
+As always, we must get organized before we can do anything!
+
+First load the tidyverse and read in the hair grass data set.
+
+```{r}
+library(tidyverse)
+hairgrass <- read_csv("hairgrass_data.csv")
+```
+
+## Phosphorus Content
+
+1.  Calculate the mean and standard deviation of the measured phosphorus content.
+
+```{r}
+hairgrass %>% 
+  summarise(mean_P_content = mean(P_content),
+            sd_P_content = sd(P_content))
+```
+
+2.  Which variable is the independent variable? Which is the dependent?
+
+    *Independent: Phosphorus content*
+
+    *Dependent: Hairgrass density*
+
+3.  Create a scatter plot of hair grass density and phosphorus content. Be sure to make the labels easier to understand.
+
+```{r}
+ggplot(hairgrass, aes(x = P_content, y = hairgrass_density_m2)) +
+  geom_point() +
+  xlab("Phosphorus Content") +
+  ylab("Hairgrass Density") +
+  theme_bw()
+```
+
+4.  Write 1-2 sentences interpreting the plot above. Is this a positive relationship, negative relationship or no relationship at all? Based on your prediction, do you think the correlation coefficient will be positive, negative, or zero?
+
+    *Answer: I don't see a clear relationship between phosphorus content and hairgrass density. Because of this, I predict that the correlation coefficient will be close to 0.*
+
+5.  Calculate the correlation coefficient, `r`.
+
+```{r}
+r <- cor(x = hairgrass$P_content, y = hairgrass$hairgrass_density_m2)
+r
+```
+
+6.  Calculate the `r^2` value. Write a one sentence interpretation of what the `r^2` value means in the context of these two variables.
+
+```{r}
+
+r^2 * 100
+```
+
+*Interpretation: 0.58% of variation between p_content and hairgrass density is accounted for*
+
+7.  What are the null and alternative hypothesis regarding the relationship between these two variables? (2 pts)
+
+    **Null: There is no significant relationship between phosphorus content and hairgrass density.**
+
+    **Alternative: There is a significant relationship between phosphorus content and hairgrass density.**
+
+8.  Create the scatter plot that includes the line of best fit (have `ggplot2` calculate the linear equation for you)
+
+```{r}
+ggplot(hairgrass, aes(P_content, hairgrass_density_m2)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  xlab("Phosphorus Content") +
+  ylab("Hairgrass Density") +
+  theme_bw()
+```
+
+9.  Using code, create the regression model in R and obtain the summary of it.
+
+```{r}
+phosphorus_model <- lm(hairgrass_density_m2 ~ P_content, data = hairgrass)
+summary(phosphorus_model)
+```
+
+10. Write out the equation for the line of best fit.
+
+    *Answer: y = 0.03x + 7.31*
+
+11. Interpret the model summary. What is the p-value for our variable of interest? Do we accept or reject the null hypothesis regarding the relationship between these two variables? What can we conclude then about building a road? (2 pts)
+
+    *Answer:*
+
+    P-value: 0.0943, which is above our cutoff of 0.05. So, we accept the null hypothesis. There is no significant relationship between p-content and hairgrass density. This means we do not have to take p-content into consideration when deciding where to build our road.
+
+## Summer Temperature
+
+Now let's do the same thing for the average summer temperatures.
+
+12. Create a scatter plot of hair grass density and average summer temperature. Remember to improve the axes labels!
+
+```{r}
+ggplot(hairgrass, aes(x = avg_summer_temp, y = hairgrass_density_m2)) +
+  geom_point() +
+  xlab("Average Summer Temperature") +
+  ylab("Hairgrass Density") +
+  theme_bw()
+```
+
+13. Write 1-2 sentences interpreting the plot above. Is this a positive relationship, negative relationship or no relationship at all? Based on your prediction, do you think the correlation coefficient will be positive, negative, or zero?
+
+    *Answer: There appears to be a positive relationship between average summer temperature and hairgrass density. Because of this, I predict the correlation coefficient will be positive.*
+
+14. Calculate the correlation coefficient, `r`.
+
+```{r}
+r <- cor(x = hairgrass$avg_summer_temp, y = hairgrass$penguin_density_m2)
+r
+```
+
+15. Calculate the `r^2` value. Write a one sentence interpretation of what the `r^2` value means in the context of these two variables.
+
+```{r}
+r^2 * 100
+```
+
+*Interpretation:* 15.46% of variation between average summer temperature and hairgrass density is accounted for.
+
+16\. Create the scatter plot that includes the line of best fit (have `ggplot2` calculate the linear equation for you)
+
+```{r}
+ggplot(hairgrass, aes(avg_summer_temp, hairgrass_density_m2)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  xlab("Average Summer Temp") +
+  ylab("Hairgrass Density") +
+  theme_bw()
+```
+
+17. Using code, create the regression model in R and obtain the summary of it.
+
+```{r}
+summer_temp_model <- lm(hairgrass_density_m2 ~ avg_summer_temp, data = hairgrass)
+summary(summer_temp_model)
+```
+
+18. Interpret the model summary. What is the p-value for our variable of interest? Do we accept or reject the null hypothesis regarding the relationship between these two variables? What can we conclude then about building a road? (2 points)
+
+    *Answer:*
+
+    Our p-value for our variable of interest is \<2e-16, which is very small. This means that there is a significant positive relationship between average summer temperature and hairgrass density. Because of this, we can reject the null hypothesis. We should avoid areas with high average summer temperatures when building our road so that we do not disturb areas with high average hairgrass density.

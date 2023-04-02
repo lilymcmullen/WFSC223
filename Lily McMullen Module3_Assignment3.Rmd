@@ -1,0 +1,223 @@
+---
+title: "Module3: Assignment3"
+author: "Ellen Bledsoe" 'Lily McMullen'
+date: "2022-11-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Assignment Details
+
+### Purpose
+
+The goal of this assignment is to assess your ability to compare *multiple* means numerically, visually, and statistically and interpret the results.
+
+### Task
+
+Write R code which produces the correct answers and correctly interpret the results of visualizations and statistical tests.
+
+### Criteria for Success
+
+-   Code is within the provided code chunks
+-   Code is commented with brief descriptions of what the code does
+-   Code chunks run without errors
+-   Code produces the correct result
+    -   Code that produces the correct answer will receive full credit
+    -   Code attempts with logical direction will receive partial credit
+-   Written answers address the questions in sufficient detail
+
+### Due Date
+
+November 8 at midnight MST
+
+# Assignment Questions
+
+In this assignment, we're going to explore data from 4 bays down in Antarctica: Emperor Bay, Hope Bay, Iceberg Bay, and Sulzberger Bay.
+
+We've assessed our fleet and feel like we have enough fishing boats to fish from two of the four nearby bays. How do we decide which two bays to fish?
+
+First, we need to assess which how many fish are in each bay. Then we will assess how many leopard seals hang around each bay. Based on these two aspects, we will make a determination for which two bays we can most safely fish and still get enough fish for the station.
+
+We will mostly be using what we learned in lesson 4 of this module.
+
+## Set-Up
+
+1.  As always, our first order of business is to load the `tidyverse` and our data sets. For this assignment, we have two different data sets: one for our survey of fish amounts and one for seal observations. Read both of them into the workspace and name them `fish` and `seals`, respectively.
+
+```{r}
+library(tidyverse)
+fish <- read_csv("fish.csv")
+seals <- read_csv("seals.csv")
+```
+
+## Fish
+
+The first question we've been asked to tackle is if the four bays have different amounts of fish. Let's find out.
+
+Explore the data set by using your favorite function to look at the data frame.
+
+```{r}
+head(fish)
+```
+
+Early last year, we had our fishers head out into each of the four bays everyday for a month to sample fish. They sampled using 5 nets in both the morning and the afternoon. They recorded how many kilograms of fish they caught in each net. The two variables that we will be using to help us make our evaluation are `bay` and `fish_kg`.
+
+### Conceptual
+
+2.  Write out our two hypotheses for these data.
+
+    **Null Hypothesis** $H_{0}$: The four bays have the same amount of fish.\
+    **Alternative Hypothesis** $H_{0}$: The four bays have different amounts of fish.
+
+### Numeric
+
+3.  Let's first find out what the mean (average) and standard deviation (spread) of `fish_kg` is in each bay. Save this data in a new data frame called `fish_summary`.
+
+```{r}
+fish_summary <- fish %>% 
+  group_by(bay) %>% 
+  summarise(mean_fish = mean(fish_kg),
+            sd_fish = sd(fish_kg)) 
+fish_summary
+```
+
+Take a look at the values. Do you think the bays have different amounts of fish based on these values? Let's keep exploring.
+
+### Visual
+
+4.  Plot the fish data using a box-and-whisker plot. It doesn't need to be fancy (no need to fix axis labels and such) but be sure it has the following: Make sure your plot has the following:
+
+    -   data points overlaying the boxes
+    -   the points should be partially transparent and jittered
+
+```{r}
+ggplot(fish, aes(bay, fish_kg)) +
+  geom_boxplot() +
+  geom_jitter(alpha = 0.5, width = 0.1)
+```
+
+### Statistics
+
+5.  In our data set, which variable is the independent variable? Is it categorical or continuous? Which is the dependent/response variable and is it categorical or continuous?
+
+    **Independent: Bay, categorical.**
+
+    **Dependent: Fish_kg, continuous.**
+
+6.  Run the appropriate statistical model to determine if there is an overall difference in means in the four bays. Save the model as an object called `fish_model`, then display the results of the model using the `summary()` function. Remember, the syntax for the model is: dependent \~ independent
+
+```{r}
+fish_model <- aov(data = fish, fish_kg ~ bay)
+summary(fish_model)
+```
+
+7.  Interpret the results of the model and answer the following questions (2 points):
+
+    -   What is the value of the test statistic?
+
+    -   What is our p-value?
+
+    -   Is our p-value higher or lower than our cut-off value of 0.05
+
+    -   Write 2-3 sentences explaining that this result means. How do we interpret this value? what does it mean for our hypotheses?
+
+        *Answers:* Our test statistic value is 1.751. Our p-value is 0.155, which is higher than 0.05. This means that there is likely no significant difference in values between our bays, and we can reject our alternate hypothesis.
+
+8.  Run some code to compute pairwise comparisons.
+
+```{r}
+TukeyHSD(fish_model)
+```
+
+9.  Write 2-3 sentences interpreting the pairwise comparisons. Which pairs of bays are significantly different from each other, if any?
+
+    *Answer:*
+
+    None of the p adj values are below 0.05, therefore none of the pairs of bays are significantly different from each other in amounts of fish.
+
+## Seals
+
+Let's do the same for our seal data. The `seals` data frame has data on how many seals were observed each day in each survey area of the bay. The columns we will be focusing on are `bay` and `num_seals`.
+
+### Conceptual
+
+10. Write out our 2 hypotheses for the seal data.
+
+    *Answer:*
+
+**Null Hypothesis**: The four bays have the same number of seals.\
+**Alternative Hypothesis**: The four bays have different numbers of seals.
+
+### Numeric
+
+11. Calculate the mean and standard deviation for the number of seals in each bay. Save this to a new data frame called `seal_summary`.
+
+```{r}
+seal_summary <- seals %>% 
+  group_by(bay) %>% 
+  summarise(mean_seals = mean(num_seals),
+            sd_seals = sd(num_seals)) 
+seal_summary
+```
+
+Take a look at the values. Do you think the bays have different numbers of seals based on these values? Let's keep exploring.
+
+### Visual
+
+12. Plot the seal using a box-and-whisker plot. It doesn't need to be fancy (no need to fix axis labels and such) but be sure it has the following: Make sure your plot has the following:
+    -   data points overlaying the boxes
+    -   the points should be partially transparent and jittered
+
+```{r}
+ggplot(seals, aes(bay, num_seals)) +
+  geom_boxplot() +
+  geom_jitter(alpha = 0.5, width = 0.1)
+```
+
+### Statistics
+
+13. Run the appropriate statistical model to determine if there is an overall difference in means in the four bays. Save the model as an object called `seal_model`, then display the results of the model using the `summary()` function.
+
+    Remember, the syntax for the model is: dependent \~ independent
+
+```{r}
+seal_model <- aov(data = seals, num_seals ~ bay)
+summary(seal_model)
+```
+
+14. Interpret the results of the model and answer the following questions (2 points):
+
+    -   What is the value of the test statistic?
+    -   What is our p-value?
+    -   Is our p-value higher or lower than our cut-off value of 0.05
+    -   Write 2-3 sentences explaining that this result means. How do we interpret this value? What does it mean for our hypotheses?
+
+    *Answers: O*ur test statistic value is 1467. Our p-value is \<2e-16, which is much lower than 0.05. This means that there is very likely a significant difference in values between our bays, and we can reject our null hypothesis.
+
+15. Run some code to compute pairwise comparisons.
+
+```{r}
+TukeyHSD(seal_model)
+```
+
+16. Write 2-3 sentences interpreting the pairwise comparisons. Which pairs of bays are significantly different from each other, if any?
+
+    *Answer:*
+
+P adj is below 0.05 for **Hope-Emporer, Iceberg-Emporer, Sulzberger-Emporer, and Sulzberger-Iceberg**. This means all of these pairs are significantly different from each other, and the others are not because their p adj is above 0.05.
+
+## Decision-Making
+
+Think through our goals in doing this analysis.
+
+We want to choose two out of four bays to fish in. We want bays that have enough fish to feed our station but the least number of leopard seals to keep our fishing crews as safe as possible.
+
+17. Based on *all* our results, which two bays do you think we should fish? Explain your rationale (2 points)
+
+    *Answer:*
+
+Based on fish alone, there is no preference for which bays we should fish in. However, 'Sulzberger' and\
+'Hope' bays have significantly lower numbers of leopard seals, so fishing in these bays would keep our fishing crews as safe as possible. I would recommend that we send our fishing crews to 'Sulzberger' and 'Hope' bays to fish, and avoid 'Iceberg' and 'Emporer' bays due to the higher number of dangerous leopard seals.
