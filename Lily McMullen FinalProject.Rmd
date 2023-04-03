@@ -1,0 +1,299 @@
+---
+title: "Final Project"
+author: 'Lily McMullen'
+date: 
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Final Project Details
+
+### Purpose
+
+The goal of this final assignment is to assess your ability to integrate the many skills you have learned over the semester: filtering and summarizing data, creating new columns, choosing the appropriate data visualizations, and performing and interpreting the appropriate statistical tests.
+
+Loading in required libraries...
+
+```{r}
+library(tidyverse)
+library(palmerpenguins)
+```
+
+-   first, it add the `penguins` data frame to your environment
+-   second, it removes all rows that have any NA values
+
+Once you've run this line of code, you should see the `penguins` data frame pop up in your environment with 333 observations (rows) and 8 variables (columns).
+
+```{r}
+penguins <- penguins %>% drop_na()
+```
+
+### Interpreting Statistical Results
+
+General guidelines:
+
+-   the cut-off for our p-values is always 0.05
+-   report the p-value that we are focused on
+-   if there are multiple p-values of interest, report all of them
+-   state whether the p-value indicates a significant difference/relationship
+-   if applicable, state whether we should or should not reject the null hypothesis
+
+## Problem Set 1 (20 points)
+
+#### Question: **Are there differences in the average bill length across the 3 islands in the data set: Dream, Biscoe, and Torgersen? (Ignore species)**
+
+1.  Calculate the minimum, maximum, and mean bill length for *each* island. (3 points)
+
+```{r}
+#min, max, and mean bill length by island. created new data frame for these values.
+island_summary <- penguins %>%
+  group_by(island) %>% 
+  summarize(min_bill = min(bill_length_mm, na.rm = TRUE),
+            max_bill = max(bill_length_mm, na.rm = TRUE),
+            mean_bill = mean(bill_length_mm, na.rm = TRUE))
+island_summary
+```
+
+2.  Which of our variables would be considered *independent* and which one *dependent*? Also determine whether each is *continuous* or *categorical*. (4 points)
+    -   **island**: Categorical, independent.
+    -   **bill length**: Continuous/numerical, dependent.
+
+Now that we have an idea numerically of the differences between the islands, let's plot the differences.
+
+3.  Choose an appropriate plot (there are a few options). Ensure that you follow the plotting guidelines in the Structure & Guidelines section above! (3 points)
+
+```{r}
+#density plot, island by color.
+ggplot(penguins, aes(bill_length_mm, fill = island)) +
+  geom_density(alpha = 0.5) + 
+  xlab("Bill Length") +
+  ylab("Density") +
+  scale_color_discrete(name = "Island") +
+  theme_classic()
+
+#boxplot
+ggplot(penguins, aes(island, bill_length_mm)) +
+  geom_boxplot() + 
+  geom_jitter(width = 0.1, alpha = 1) +
+  xlab("Bill Length") +
+  ylab("Density") +
+  scale_color_discrete(name = "Island") +
+  theme_classic()
+```
+
+4.  Write the correct pair of statistical hypotheses for our question. (2 points)
+
+    **Null**: There is no significant difference in penguin bill length between islands.\
+    **Alternative**: There is a significant difference in penguin bill length between islands.
+
+5.  Run the appropriate statistical analysis for our question. (2 points)
+
+```{r}
+bill_model <- aov(data = penguins, bill_length_mm ~ island)
+summary(bill_model)
+```
+
+6.  Interpret the results of this test. (3 points)
+
+    -   is there a significant difference? **Yes**
+    -   what does that significant difference mean? **It means that there is a significant difference in bill lengths between different islands.**
+    -   should we reject the null hypothesis? **Yes, we should reject the null hypothesis.**
+
+    *Answer:* **Yes, there is a significant difference in bill lengths between different islands. Because of this, we should reject the null hypothesis.**
+
+7.  Should we run pairwise comparisons? If no, explain why not. If yes, do so and interpret the results. (3 points)
+
+    *Answer:* We need to run pairwise comparisons because we ran an ANOVA.
+
+    According to our results, there is a significant difference in bill length between Torgersen and Biscoe islands, as well as Torgersen and Dream islands. There is no significant difference between Dream and Biscoe islands.
+
+    We know this because our p adjusted value for Torgersen-Biscoe and Torgersen-Dream is lower than 0.05, and our p adjusted value for Dream-Biscoe is greater than 0.05.
+
+```{r}
+TukeyHSD(bill_model)
+```
+
+## Problem Set 2 (20 points)
+
+#### Question: Is there a significant relationship between bill length and bill depth for penguins on Biscoe Island?
+
+For this problem set, we are going to use data from Biscoe island only.
+
+1.  Create a new data frame called `biscoe` that includes only penguins from Biscoe island. This new data frame should have 163 rows. (1 point)
+
+```{r}
+biscoe <- penguins %>% 
+  filter(island == "Biscoe")
+biscoe
+```
+
+You will want to use the `biscoe` data set for the rest of Problem Set #2.
+
+This is a scenario where there is no independent and no dependent variable. Go ahead and **put bill length on the x-axis and bill depth on the y-axis.**
+
+For now, ignore species. We will address that later in the problem set.
+
+2.  Plot the relationship between bill length and bill depth using the appropriate plot type. (2 points)
+
+    -   Be sure to add a line of best fit using the `geom_smooth` function---and make sure it is a straight line (no wiggles, which the default will produce).
+    -   Ensure that the plot has clear labels on the axes (follow the Structure & Guidelines).
+    -   Remember, we are ignoring species for now.
+
+```{r}
+ggplot(biscoe, aes(x = bill_length_mm, y = bill_depth_mm)) +
+  geom_point() +
+  geom_smooth(method = lm) +
+  xlab("Bill Length (mm)") +
+  ylab("Bill Depth (mm)") +
+  theme_classic()
+```
+
+3.  Calculate the correlation coefficient, `r`. What does this value tell us about the relationship (positive, negative, no relationship)? (2 points)
+
+    *Answer:* The correlation coefficient is -0.044. Since this is a negative value, bill length and bill depth have a negative relationship.
+
+```{r}
+r <- cor(x = biscoe$bill_length_mm, y = biscoe$bill_depth_mm)
+r
+```
+
+4.  Calculate the `r^2` value. How much variation is explained by the line of best fit? Remember, this number is typically expressed as a percent (x 100). (2 points)
+
+    *Answer:* 19% of variation is explained by the line of best fit.
+
+```{r}
+r^2 * 100
+```
+
+5.  Let's see if there is a significant relationship between bill length and bill depth. Perform the correct statistical analysis (1 point) and interpret the results. (4 points total)
+
+    -   What is the equation of the line of best fit? (1 point)
+    -   What is the p-value? (1 point)
+    -   Is there a significant relationship? (1 point)
+
+    *Answer:* The equation of the line of best fit is:
+
+    bill_length_mm = -1.17 \* bill_depth_mm + 63.93
+
+    The p-value is 2.74e-09 (very small). This means that there is a significant relationship between bill length and bill depth in penguins on the Biscoe island.
+
+```{r}
+lm_model <- lm(data = biscoe, bill_length_mm ~ bill_depth_mm)
+summary(lm_model)
+```
+
+When we look at the plot of the data, it looks like there might be two different groups in the data.
+
+6.  Let's make the color of the points and the linear models differ by species on Biscoe Island. Be sure to adjust *all* labels on the plot accordingly. (2 points)
+
+```{r}
+ggplot(biscoe, aes(bill_length_mm, bill_depth_mm, color = species)) +
+  geom_point() +
+  geom_smooth(method = lm) + 
+  xlab("Bill Length (mm)") +
+  ylab("Bill Depth (mm)") +
+  scale_color_discrete(name = "Species") +
+  theme_classic()
+```
+
+7.  Run the appropriate statistical test, adding species into the model. (2 points)
+
+```{r}
+biscoe_model <- lm(data = biscoe, bill_depth_mm ~ bill_length_mm*species)
+summary(biscoe_model)
+```
+
+8.  Interpret the results of the test above. Is species significant? Is there a significant interaction between bill length and species? (2 points)
+
+    *Answer:* There is not a significant interaction between bill length and species. The p-value for bill_length_mm:speciesGentoo is 0.7715, which is \> 0.05.
+
+9.  Write 2-3 sentences discussing if and/or how adding species into our linear model changes our interpretation of the data. Did the type of relationship change? Do the two linear models tell us different things? (3 points)
+
+    *Answer:* Without our linear model, we thought that there was a negative relationship between bill length and bill depth. This is because we were seeing bill length and bill depth data from both species on the Biscoe island. Adding species to our linear model allowed us to separate the two groups (species) and realize that we actually have a positive relationship. Adding species allowed us to have a more accurate interpretation of our data.
+
+## Problem Set 3 (20 points)
+
+#### Question: Is there a difference in the average *body mass* between penguins with long flippers and penguins with short flippers?
+
+In order to address this question, our first step is to create a new column in our data frame that tells us whether each penguin has a long flipper or a short flipper.
+
+-   flippers are considered "long" if they are at least 200 mm in length (\>= 200)
+-   flippers are considered "short" if they are less than 200 mm (\< 200)
+
+1.  Using the `mutate()` and `if_else()` functions, create a new column called `long_or_short` with the correct term ("long" or "short") for each flipper length. Be sure to save this in a new data frame called `flippers`. (3 points)
+
+```{r}
+flippers <- penguins %>%
+   mutate(long_or_short = if_else(condition = penguins$flipper_length_mm >= 200,
+                                 true = "Long",
+                                 false = "Short"))
+flippers
+```
+
+We will be using the `flippers` data frame for the rest of this problem set! It has the `long_or_short` column that we will be referencing.
+
+2.  Now let's summarize our data using this new column. Calculate the mean and standard deviation *body mass* for penguins with long flippers and penguins with short flippers. (2 points)
+
+    Take a few seconds to think this through before you start coding. We want the values for *body mass*. We want our groups determined by the values in the `long_or_short` column that we just created.
+
+```{r}
+flippers %>% 
+  group_by(long_or_short) %>%
+  summarise(mean(body_mass_g), 
+            sd(body_mass_g))
+```
+
+Ok, we have summarized the body mass data for our two groups, and it looks like there might be a real difference in the body masses between the long group and the short group.
+
+3.  Determine which variable is dependent and which is independent. Also determine if each variable is continuous or categorical. (4 points)
+
+-   **body mass**: dependent, continuous
+-   **flipper group (`long_or_short`)**: independent, categorical.
+
+Let's plot the body mass data for the two groups.
+
+4.  Choose an appropriate plot for data with one continuous variable and one categorical variable (there are a few options). Be sure to adjust the x- and y-axis labels appropriately. (2 points)
+
+```{r}
+#boxplot
+ggplot(flippers, aes(long_or_short, body_mass_g)) +
+  geom_boxplot() + 
+  geom_jitter(width = 0.1, alpha = 1) +
+  xlab("Flipper Length") +
+  ylab("Body Mass (g)") +
+  theme_classic()
+```
+
+5.  Write the pair of statistical hypotheses for our question. (2 points)
+
+    **Null**: There is no significant relationship between body mass and flipper length.\
+    **Alternative**: There is a significant relationship between body mass and flipper length.
+
+6.  Perform the appropriate analysis to compare the body mass means of our two groups: long and short. (2 points)
+
+```{r}
+t.test(data = flippers, body_mass_g ~ long_or_short)
+```
+
+7.  Interpret the results of this test. (3 points)
+
+    -   is there a significant difference?
+    -   what does that significant difference mean?
+    -   should we reject the null hypothesis?
+
+    *Answer:* There is a significant difference between body mass (g) values between the long and short flipper length groups. We know this because the p-value is \< 2.2e-16, which is very low. Because of this, we should reject the null hypothesis.
+
+8.  Should we run pairwise comparisons? If no, explain why not. If yes, do so and interpret the results. (2 points)
+
+    *Answer:*
+
+```{r}
+#No, we only run pairwise comparisons for ANOVAs (more than two groups)
+```
+
+## The End!
+
+Nice work, and thanks for a great semester!
